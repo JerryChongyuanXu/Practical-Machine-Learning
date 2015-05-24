@@ -1,0 +1,54 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "Chongyuan Xu"
+date: "2015年5月24日"
+output: html_document
+---
+
+#Synopsis
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. The project will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E). The goal of your project is to predict the manner in which they did the exercise. 
+
+#Data Processing
+
+First, we need to load data and find the basic information of the data, especially the variable "classe". 
+```{r, echo = TRUE}
+data <- read.csv("pml-training.csv")
+summary(data$classe)
+dim(data)
+```
+
+Then, we must collect none empty variables.
+```{r, echo = TRUE}
+NAColumn <- apply(data, 2, function(x)
+  {
+  sum(is.na(x) | x == "")
+  })
+data <- data[, which(NAColumn == 0)]
+dim(data)
+```
+
+Now we split the dataset into a training set and a testing set. 
+
+```{r, echo = TRUE}
+library(caret)
+inTrain <- createDataPartition(y = data$classe, p = 0.75, list = FALSE)
+training <- data[inTrain, ]
+testing <- data[-inTrain, ]
+dim(training)
+```
+
+We fit the model on the next step.
+
+```{r, echo = TRUE}
+library(randomForest)
+set.seed(32343)
+modelFit <- train(classe ~., data = training, method = "rf")
+```
+
+Check the accuracy on training set and testing set. 
+
+```{r, echo = TRUE}
+confusionMatrix(predict(modelFit, training), training$classe)
+confusionMatrix(predict(modelFit, testing), testing$classe)
+```
